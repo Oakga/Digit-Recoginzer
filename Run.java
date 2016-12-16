@@ -9,18 +9,28 @@ public class Run {
     public static void main(String args[]) {
 
 
-        //intial values
+        //intial values (set these values)
+        int Trial=100;
         Double hidden_bias = 0.35;
         Double output_bias = .6;
+        Double Learning_rate=0.5;
+        int num_inputs=2;
+        int num_hidden=2;
+        int num_outputs=2;
 
-        //hidden layer
+        //test data for 2 hidden and 2 outputs
+        ArrayList<Double> training_inputs = new ArrayList<Double>(Arrays.asList(0.05, 0.1));
+        ArrayList<Double> training_outputs = new ArrayList<Double>(Arrays.asList(0.01, 0.99));
+
+        //hidden layer weights(can be set randomly)
+        //if the weights are to be set randomly please remove weights from constructor of neural net
         Double[] first_hidden_neuron = {0.15, 0.2};
         Double[] second_hidden_neuron = {0.25, 0.3};
         ArrayList<Double[]> hidden_layer_weights = new ArrayList<Double[]>();
         hidden_layer_weights.add(first_hidden_neuron);
         hidden_layer_weights.add(second_hidden_neuron);
 
-        //output layer
+        //output layer weights
         Double[] first_output_neuron = {0.4, 0.45};
         Double[] second_output_neuron = {0.5, 0.55};
         ArrayList<Double[]> output_layer_weights = new ArrayList<Double[]>();
@@ -28,10 +38,10 @@ public class Run {
         output_layer_weights.add(second_output_neuron);
 
         //nn creation
-        Neural_Network nn = new Neural_Network(0.3,
-                2,
-                2,
-                2,
+        Neural_Network nn = new Neural_Network(Learning_rate,
+                num_inputs,
+                num_hidden,
+                num_outputs,
                 hidden_layer_weights,
                 output_layer_weights,
                 hidden_bias,
@@ -43,14 +53,11 @@ public class Run {
         nn.output_layer.inspect();
 
         //train
-        ArrayList<Double> training_inputs = new ArrayList<Double>(Arrays.asList(0.05, 0.1));
-        ArrayList<Double> training_outputs = new ArrayList<Double>(Arrays.asList(0.01, 0.99));
-
         ArrayList<Double> total_errors= new ArrayList<Double>();
         Double total_error;
         sop("Training executing");
         int count =0;
-        while(count<100000) {
+        while(count<Trial) {
             sop("Trial: "+count+" starting");
             nn.train(training_inputs, training_outputs);
             nn.inspect();
