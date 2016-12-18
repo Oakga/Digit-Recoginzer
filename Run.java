@@ -1,5 +1,8 @@
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
 
 /**
  * Created by root on 12/14/16.
@@ -10,70 +13,55 @@ public class Run {
 
 
         //intial values (set these values)
-        int Trial=100;
+        int Trial = 100;
         Double hidden_bias = 0.35;
-        Double output_bias = .6;
-        Double Learning_rate=0.5;
-        int num_inputs=2;
-        int num_hidden=2;
-        int num_outputs=2;
+        Double output_bias = 0.2;
+        Double Learning_rate = 0.57;
+        int num_inputs = 784;
+        int num_hidden = 500;
+        int num_outputs = 1;
 
-        //test data for 2 hidden and 2 outputs
-        ArrayList<Double> training_inputs = new ArrayList<Double>(Arrays.asList(0.05, 0.1));
-        ArrayList<Double> training_outputs = new ArrayList<Double>(Arrays.asList(0.01, 0.99));
+        Scanner infile = null;
+        String data[];
+        ArrayList<Double> total_errors = new ArrayList<Double>();
+        ArrayList<Double> training_inputs = null;
+        ArrayList<Double> training_outputs = null;
 
-        //hidden layer weights(can be set randomly)
-        //if the weights are to be set randomly please remove weights from constructor of neural net
-        Double[] first_hidden_neuron = {0.15, 0.2};
-        Double[] second_hidden_neuron = {0.25, 0.3};
-        ArrayList<Double[]> hidden_layer_weights = new ArrayList<Double[]>();
-        hidden_layer_weights.add(first_hidden_neuron);
-        hidden_layer_weights.add(second_hidden_neuron);
-
-        //output layer weights
-        Double[] first_output_neuron = {0.4, 0.45};
-        Double[] second_output_neuron = {0.5, 0.55};
-        ArrayList<Double[]> output_layer_weights = new ArrayList<Double[]>();
-        output_layer_weights.add(first_output_neuron);
-        output_layer_weights.add(second_output_neuron);
+        try {
+            infile = new Scanner(new File("train.csv"));
+        } catch (IOException e) {
+            sop("File not found");
+        }
 
         //nn creation
         Neural_Network nn = new Neural_Network(Learning_rate,
                 num_inputs,
                 num_hidden,
                 num_outputs,
-                hidden_layer_weights,
-                output_layer_weights,
                 hidden_bias,
                 output_bias
         );
 
-        sop("Net initialization");
-        nn.hidden_layer.inspect();
-        nn.output_layer.inspect();
 
-        //train
-        ArrayList<Double> total_errors= new ArrayList<Double>();
-        Double total_error;
-        sop("Training executing");
-        int count =0;
-        while(count<Trial) {
-            sop("Trial: "+count+" starting");
+        infile.nextLine();
+        int count_trials=0;
+        ArrayList<ArrayList<Double>> pixelList = new ArrayList<ArrayList<Double>>();
+        while (infile.hasNextLine() && count_trials < 500) {
+
+
+            data = infile.nextLine().split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)");
+            pixelList = getNextRow(data);
+
+
+            training_inputs = pixelList.get(0);
+            training_outputs = pixelList.get(1);
+
             nn.train(training_inputs, training_outputs);
-            nn.inspect();
+            nn.calculate_total_error(training_inputs, training_outputs);
 
-            total_error=nn.calculate_total_error(training_inputs,training_outputs);
-            total_errors.add(total_error);
-            sop("Trail "+count+" total error: "+total_error);
-            count++;
+            count_trials++;
         }
-
-        //Printing out total errors this will be less in each case if correct
-        sop("Analyzing total errors in each trails");
-        for(int i=0;i<total_errors.size();i++){
-            sop("Trail "+i+" total error: "+total_errors.get(i));
-        }
-
+        infile.close();
 
     }
 
@@ -81,6 +69,31 @@ public class Run {
     public static double round(double value) {
         return (double) Math.round(value * 10000d) / 10000d;
     }
+
+    public static ArrayList<ArrayList<Double>> getNextRow(String pixels[]) {
+        ArrayList<ArrayList<Double>> result = new ArrayList<ArrayList<Double>>();
+        ArrayList<Double> output = new ArrayList<Double>();
+        ArrayList<Double> input = new ArrayList<Double>();
+        double max = -1, num = 0;
+        output.add(new Double(pixels[0]));
+        for (int a = 1; a < 785; a++) {
+            num = Integer.parseInt(pixels[a]);
+            if (num > max) max = num;
+            input.add(new Double(pixels[a]));
+        }
+
+        //this for loop normalizes all the indexes
+
+        for (int a = 1; a < input.size(); a++) {
+            input.set(a, (input.get(a)) / max);
+        }
+
+        result.add(input);
+        result.add(output);
+
+        return result;
+    }
+
 
     public static void sop(Object text) {
         System.out.println("" + text);
