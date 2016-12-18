@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -11,6 +12,9 @@ public class Neural_Network {
     int num_inputs;
     Neuron_Layer hidden_layer;
     Neuron_Layer output_layer;
+    ArrayList<Num> result;
+    int right = 0;
+    int wrong = 0;
 
     public Neural_Network(
             Double Learning_rate,
@@ -22,7 +26,7 @@ public class Neural_Network {
             Double hidden_layer_bias,
             Double output_layer_bias
     ) {
-        this.Learning_rate=Learning_rate;
+        this.Learning_rate = Learning_rate;
         this.num_inputs = num_inputs;
         this.hidden_layer = new Neuron_Layer(num_hidden, hidden_layer_bias);
         this.output_layer = new Neuron_Layer(num_outputs, output_layer_bias);
@@ -30,28 +34,44 @@ public class Neural_Network {
         //hidden_layer_weights
         init_weights_from_inputs_to_hidden_layer_neurons(hidden_layer_weights);
         init_weights_from_hidden_layer_to_output_layer_neurons(output_layer_weights);
+
+        //intialize number for results
+        result = new ArrayList<Num>();
+        intialize_result_Array_list(result);
     }
 
     public Neural_Network(
+            Double Learning_rate,
             int num_inputs,
             int num_hidden,
             int num_outputs,
             Double hidden_layer_bias,
             Double output_layer_bias
     ) {
+        this.Learning_rate = Learning_rate;
         this.num_inputs = num_inputs;
-        hidden_layer = new Neuron_Layer(num_hidden, hidden_layer_bias);
-        output_layer = new Neuron_Layer(num_outputs, output_layer_bias);
+        this.hidden_layer = new Neuron_Layer(num_hidden, hidden_layer_bias);
+        this.output_layer = new Neuron_Layer(num_outputs, output_layer_bias);
 
         //hidden_layer_weights
         init_weights_from_inputs_to_hidden_layer_neurons();
         init_weights_from_hidden_layer_to_output_layer_neurons();
+
+        //intialize number for results
+        result = new ArrayList<Num>();
+        intialize_result_Array_list(result);
     }
 
     public ArrayList<Double> feed_forward(ArrayList<Double> inputs) {
         ArrayList<Double> hidden_layer_outputs = this.hidden_layer.feed_forward(inputs);
-        return this.output_layer.feed_forward(hidden_layer_outputs);
+        ArrayList<Double> outputs;
+        output_layer.output_turn=true;
+        outputs = this.output_layer.feed_forward(hidden_layer_outputs);
+        output_layer.output_turn=false;
+
+        return outputs;
     }
+
 
     //test this out
     public void train(
@@ -113,14 +133,56 @@ public class Neural_Network {
 
     }
 
-    public Double calculate_total_error(ArrayList<Double> training_inputs,ArrayList<Double> training_outputs) {
+    public Double calculate_total_error(ArrayList<Double> training_inputs, ArrayList<Double> training_outputs) {
         Double total_error = 0.0;
-        feed_forward(training_inputs);
+
+        ArrayList<Double> predicted_outputs = feed_forward(training_inputs);
+        //update the digit array for evaluation
+        update_result(training_outputs,predicted_outputs);
 
         for (int i = 0; i < training_outputs.size(); i++) {
             total_error += output_layer.neurons.get(i).calculate_error(training_outputs.get(i));
         }
         return total_error;
+    }
+
+    //Modified to only work with 1 label output
+    private void update_result(ArrayList<Double> training_output, ArrayList<Double> predicted_outputs) {
+        Double predicted_output = (predicted_outputs.get(0));
+        Double actual_output = (training_output.get(0));
+
+/*        sop("actual output: " + actual_output);
+        sop("predicted output: " + predicted_output);*/
+
+       /* Num digit_number_actual = result.get(actual_output);
+        Num digit_number_predicted = result.get(predicted_output);*/
+
+        /*digit_number_actual.show_up++;
+
+        //For updating true positive and true negatives
+        if (predicted_output == actual_output) {
+            right++;
+            sop("update true positive " + digit_number_predicted.number);
+            sop("about to be updated digit number " + digit_number_predicted.number);
+            digit_number_predicted.true_positive++;
+            update_true_negative_for_all_other_digits(digit_number_predicted);
+        }
+
+        //For updating false negative and false positive
+        else {
+            wrong++;
+            digit_number_predicted.false_negative++;
+            digit_number_actual.false_positive++;
+        }
+*/
+    }
+
+    private void update_true_negative_for_all_other_digits(Num digit_number) {
+        for (int i = 0; i < result.size(); i++) {
+            if (i != digit_number.number) {
+                result.get(i).true_negative++;
+            }
+        }
     }
 
 
@@ -195,7 +257,22 @@ public class Neural_Network {
         }
     }
 
-    public void inspect(){
+    public static void intialize_result_Array_list(ArrayList<Num> list) {
+        for (int i = 0; i < 10; i++) {
+            Num new_number = new Num(i);
+            list.add(new_number);
+        }
+    }
+
+    public void inspect_result() {
+        for (int i = 0; i < result.size(); i++) {
+            result.get(i).inspect();
+        }
+        sop("rights: " + right);
+        sop("wrongs:" + wrong);
+    }
+
+    public void inspect() {
         sop("Inspecting the neural network");
         sop("Hidden Layer");
         hidden_layer.inspect();
